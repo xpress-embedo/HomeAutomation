@@ -1,0 +1,348 @@
+﻿Build1=Default,b4a.weathermonitor
+File1=main.bal
+FileGroup1=Default Group
+Group=Default Group
+IconFile=
+Library1=core
+Library2=jmqtt
+Library3=ime
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="5" android:targetSdkVersion="19"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~' Added by Embedded Laboratory~\n~SetApplicationAttribute(android:theme, "@android:style/Theme.Holo.Light")~\n~' Added by Embedded Laboratory~\n~'SetApplicationAttribute(android:theme, "@style/LightTheme")~\n~'CreateResource(values, colors.xml,~\n~'<resources>~\n~'    <color name="actionbar">#ff039be5</color>~\n~'   <color name="statusbar">#ff006db3</color>~\n~'   <color name="textColorPrimary">#ffffffff</color>~\n~'   <color name="navigationBar">#ff006db3</color>~\n~'</resources>~\n~')~\n~'CreateResource(values-v20, theme.xml,~\n~'<resources>~\n~'    <style name="LightTheme" parent="@android:style/Theme.Material.Light">~\n~'        <item name="android:colorPrimary">@color/actionbar</item>~\n~'        <item name="android:colorPrimaryDark">@color/statusbar</item>~\n~'        <item name="android:textColorPrimary">@color/textColorPrimary</item>~\n~'        <item name="android:navigationBarColor">@color/navigationBar</item>~\n~'    </style>~\n~'</resources>~\n~')~\n~'CreateResource(values-v14, theme.xml,~\n~'<resources>~\n~'    <style name="LightTheme" parent="@android:style/Theme.Holo.Light">~\n~'       <item name="android:actionBarStyle">@style/CustomActionBarStyle</item>~\n~'    </style>~\n~'   <style name="CustomActionBarStyle" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">~\n~'       <item name="android:background">@color/actionbar</item>~\n~'   </style>~\n~'</resources>~\n~')~\n~''End of default text.~\n~
+Module1=Starter
+NumberOfFiles=1
+NumberOfLibraries=3
+NumberOfModules=1
+Version=7.8
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: Home Automation
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: True
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: True
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+	Public server_add_glob As String
+	Public port_num_glob As String
+	Public username_glob As String
+	Public password_glob As String
+	Public client As MqttClient
+	Public connected As Boolean
+	Public setting As Map
+End Sub
+
+Sub Globals
+	' These global variables will be redeclared each time the activity is created.
+	' These variables can only be accessed from this module.
+	' Private temperature As Label
+	' Private humidity As Label
+	' Private led As ToggleButton
+	Private server_add As EditText
+	Private username As EditText
+	Private password As EditText
+	Private port_number As EditText
+	Private connect As Button
+	Private disconnect As Button
+	Private led_on_off As ToggleButton
+	Private temp As Label
+	Private humidity As Label
+	
+	Dim IME As IME
+	Private load1 As ToggleButton
+	Private load2 As ToggleButton
+	Private Load3 As ToggleButton
+	Private Load4 As ToggleButton
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Do not forget to load the layout file created with the visual designer. For example:
+	Activity.LoadLayout("main")
+	' Load the Content from here
+	' To Hardcode Values
+'	setting.Initialize
+'	setting.Put("Server_Address", "m14.cloudmqtt.com")
+'	setting.Put("Port_Number", "18410")
+'	setting.Put("Username", "setsmjwc")
+'	setting.Put("Password", "apDnKqHRgAjA")
+'	File.WriteMap(File.DirInternal, "setting.txt", setting)
+	'Reading Time
+	If File.Exists(File.DirInternal, "setting.txt") Then
+		setting = File.ReadMap(File.DirInternal, "setting.txt")
+	Else
+		setting.Initialize
+		setting.Put("Server_Address", "m14.cloudmqtt.com")
+		setting.Put("Port_Number", "18410")
+		setting.Put("Username", "setsmjwc")
+		setting.Put("Password", "apDnKqHRgAjA")
+		File.WriteMap(File.DirInternal, "setting.txt", setting)
+	End If
+	server_add_glob = setting.Get("Server_Address")
+	port_num_glob = setting.Get("Port_Number")
+	username_glob = setting.Get("Username")
+	password_glob = setting.Get("Password")
+	
+	'##############################################################
+'    USING THE MAP Data Type for getting Settings
+'	'Load the Content From the files
+'	'This can be moved to starter file, but for simplicity let's keep it here for now
+'	Dim content As String
+'	If File.Exists(File.DirInternal, "config.txt") Then
+'		' Read File Content
+'		content = File.ReadString(File.DirInternal, "config.txt")
+'	Else
+'		File.WriteString(File.DirInternal, "config.txt", _
+'		"www.serveraddress.com" & CRLF & "1883" & CRLF & "username" & CRLF & "password" )
+'	End If
+'	Dim config_array() As String
+'	' Split Content
+'	config_array = Regex.Split(CRLF, content)
+'	' Update Global Variable
+'	server_add_glob = config_array(0)
+'	port_num_glob = config_array(1)
+'	username_glob = config_array(2)
+'	password_glob = config_array(3)
+	'#############################################################
+	
+	' Update Display
+	server_add.Text = server_add_glob
+	port_number.Text = port_num_glob
+	username.Text = username_glob
+	password.Text =password_glob
+	
+	' Enable and Disable Controls
+	server_add.Enabled = True
+	port_number.Enabled = True
+	username.Enabled = True
+	password.Enabled = True
+	connect.Enabled = True
+	disconnect.Enabled = False
+	led_on_off.Enabled = False
+	load1.Enabled = False
+	load2.Enabled = False
+	Load3.Enabled = False
+	Load4.Enabled = False
+	
+	IME.Initialize("IME")
+	IME.AddHeightChangedEvent
+	'IME.SetCustomFilter(server_add, server_add.INPUT_TYPE_NUMBERS, "0123456789.")
+	IME.SetCustomFilter(port_number, port_number.INPUT_TYPE_NUMBERS, "0123456789")
+	
+	'Disable Spell Checking
+	'Thread: https://www.b4x.com/android/forum/threads/ics-disable-spellchecking-in-edittext.14994/
+	server_add.InputType = Bit.Or(server_add.InputType,524288)
+	username.InputType = Bit.Or(username.InputType,524288)
+End Sub
+
+Sub Activity_Resume
+	' SetButtonState
+	
+End Sub
+
+'Sub SetButtonState
+'	' Enable Led Toggle Button when Connected to Server
+'	led.Enabled = Starter.connected
+'End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+
+Sub connect_Click
+	'Connect with Server
+	connect_with_server
+End Sub
+
+
+Sub disconnect_Click
+	'Disconnect with Server
+	disconnect_with_server
+End Sub
+
+
+Public Sub connect_with_server()
+	Private mo As MqttConnectOptions
+	'Specify MQTT Server Address and Port Number
+	' EventName, Server Address, ClientID are Arguments
+	' client.Initialize("client", "tcp://m14.cloudmqtt.com:18410", "android" )
+	' Specify Username and Password
+	' mo.Initialize("setsmjwc", "apDnKqHRgAjA")
+	' Connect method is used when don't have username and password
+	' Connect2 (Options As org.eclipse.paho.client.mqttv3.MqttConnectOptions)
+	Dim server_info As String
+	server_info = "tcp://" & server_add_glob & ":" & port_num_glob
+	client.Initialize("client", server_info, "Android")
+	mo.Initialize(username_glob, password_glob)
+	client.Connect2(mo)
+	Log( "Trying to Connect with MQTT Server")
+End Sub
+
+'Disconnect with Server
+Public Sub disconnect_with_server()
+	client_Disconnected
+	' Enable and Disable Controls
+	server_add.Enabled = True
+	port_number.Enabled = True
+	username.Enabled = True
+	password.Enabled = True
+	connect.Enabled = True
+	disconnect.Enabled = False
+	led_on_off.Enabled = False
+	load1.Enabled = False
+	load2.Enabled = False
+	Load3.Enabled = False
+	Load4.Enabled = False
+End Sub
+
+'This is a Callback Function, when received code from MQTT Server
+Sub client_Connected (Success As Boolean)
+	connected = Success
+	If Success Then
+		Log( "Connected with MQTT Server")
+		ToastMessageShow("Connected!", True)
+		' Subscribe to messages with topic name "monitor"
+		' This topic will contain, Temperature and Humidity Values
+		' Arguments: Topic Name(String) and QoS (Int)
+		client.Subscribe("home/#", 0)
+		' Enable and Disable Controls
+		server_add.Enabled = False
+		port_number.Enabled = False
+		username.Enabled = False
+		password.Enabled = False
+		connect.Enabled = False
+		disconnect.Enabled = True
+		led_on_off.Enabled = True
+		load1.Enabled = True
+		load2.Enabled = True
+		Load3.Enabled = True
+		Load4.Enabled = True
+	Else
+		Log(LastException)
+	End If	
+End Sub
+
+' This is a Callback Function, when MQTT Server gets disconnected
+Sub client_Disconnected
+	connected = False
+	client.Close()
+End Sub
+
+'Callback function when Subscribed Message Arrived
+Sub client_MessageArrived (Topic As String, Payload() As Byte)
+	' Parse Temperature and Humidity Data and Display on Application
+	Log("Topic: " & Topic)
+	Log("Message: " & BytesToString(Payload, 0, Payload.Length, "UTF8") )
+	Dim Rx_String As String
+	If Payload.Length = 5 Then
+		' Update Temperature
+		Rx_String = BytesToString(Payload, 0, 2, "UTF8")
+		update_temperature( Rx_String )
+		Rx_String = BytesToString(Payload, 3, 2, "UTF8")
+		update_humidity( Rx_String )
+	End If
+End Sub
+
+
+Sub led_on_off_CheckedChange(Checked As Boolean)
+	led_ButtonChanged(Checked)	
+End Sub
+
+' Update Temperature
+Public Sub update_temperature(temp_value As String )
+	temp.Text = temp_value
+End Sub
+
+' Update Humidity 
+Public Sub update_humidity(humid_value As String )
+	humidity.Text = humid_value
+End Sub
+
+
+Sub server_add_EnterPressed
+	setting.Put("Server_Address", server_add.Text)
+	File.WriteMap(File.DirInternal, "setting.txt", setting)
+	server_add_glob = setting.Get("Server_Address")
+End Sub
+
+Sub port_number_EnterPressed
+	setting.Put("Port_Number", port_number.Text)
+	File.WriteMap(File.DirInternal, "setting.txt", setting)
+	port_num_glob = setting.Get("Port_Number")
+End Sub
+
+Sub username_EnterPressed
+	setting.Put("Username", username.Text)
+	File.WriteMap(File.DirInternal, "setting.txt", setting)
+	username_glob = setting.Get("Username")
+End Sub
+
+Sub password_EnterPressed
+	setting.Put("Password", password.Text)
+	File.WriteMap(File.DirInternal, "setting.txt", setting)
+	password_glob = setting.Get("Password")
+End Sub
+
+' Publish to Change Led State
+Public Sub led_ButtonChanged(state As Boolean)
+	Dim b As Byte
+	If state Then
+		b = 0x31
+	Else
+		b = 0x30
+	End If
+	' Publish Led State
+	client.Publish("led", Array As Byte(b))
+End Sub
+
+' Publish to the changed Load Button state
+Sub load1_CheckedChange(Checked As Boolean)
+	Dim b As Byte
+	If Checked Then
+		b = 0x31
+	Else
+		b = 0x30
+	End If
+	' Publish Load State
+	client.Publish("load1", Array As Byte(b))
+End Sub
+
+Sub load2_CheckedChange(Checked As Boolean)
+	Dim b As Byte
+	If Checked Then
+		b = 0x31
+	Else
+		b = 0x30
+	End If
+	' Publish Load State
+	client.Publish("load2", Array As Byte(b))
+End Sub
+
+Sub Load3_CheckedChange(Checked As Boolean)
+	Dim b As Byte
+	If Checked Then
+		b = 0x31
+	Else
+		b = 0x30
+	End If
+	' Publish Load State
+	client.Publish("load3", Array As Byte(b))
+End Sub
+
+Sub Load4_CheckedChange(Checked As Boolean)
+	Dim b As Byte
+	If Checked Then
+		b = 0x31
+	Else
+		b = 0x30
+	End If
+	' Publish Load State
+	client.Publish("load4", Array As Byte(b))
+End Sub
