@@ -184,11 +184,12 @@ void reconnect()
 void setup() 
 {
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
+  digitalWrite(BUILTIN_LED, HIGH);  // Turn-Off Led
   // Initialize Relay's Pins as Output
   pinMode(RELAY1, OUTPUT );
   pinMode(RELAY2, OUTPUT );
   pinMode(RELAY3, OUTPUT );
-  pinMode(RELAY3, OUTPUT );
+  pinMode(RELAY4, OUTPUT );
   // Turn-Off all relays
   digitalWrite( RELAY1, LOW);
   digitalWrite( RELAY2, LOW);
